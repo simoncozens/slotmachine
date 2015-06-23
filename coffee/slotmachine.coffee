@@ -75,8 +75,6 @@ SlotMachine =
     slot = this.slots[index]
     ul = $("<ul/>").css({webkitTransitionTimingFunction: 'cubic-bezier(0, 0, 0.2, 1)'}).data(
       slotYPosition: 0,
-      slotPosition: index,
-      slotWidth: 0,
     )
 
     for entry in slot
