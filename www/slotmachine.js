@@ -5,25 +5,6 @@ SlotMachine = {
   cellHeight: 44,
   friction: 0.003,
   strictAssertions: true,
-  slots: [
-    [
-      {
-        label: "January"
-      }, {
-        label: "February",
-        "default": true
-      }
-    ], [
-      {
-        label: "1",
-        value: 1
-      }, {
-        label: "2",
-        value: 2
-      }
-    ]
-  ],
-  slotStyles: ["", ""],
   buttons: {
     cancel: {
       label: "Cancel",
@@ -45,7 +26,6 @@ SlotMachine = {
     }
   },
   changeAction: function() {},
-  buttonAction: function(but) {},
   assert: function(test, label) {
     if (!test) {
       console.log("Assertion failed: " + label);
@@ -62,7 +42,7 @@ SlotMachine = {
     $(window).off("orientationchange", this.orientationChangeHandler);
     return $(window).off("scroll", this.scrollHandler);
   },
-  init: function() {
+  init: function(slots) {
     var button, name, swheader, swwrapper, _ref;
     SlotMachine.destroy();
     swheader = $('<div id="sw-header">');
@@ -78,7 +58,7 @@ SlotMachine = {
     }).append(swheader);
     swwrapper.append('<div id="sw-slots-wrapper"><div id="sw-slots"></div></div><div id="sw-frame"></div>');
     $("body").append(swwrapper);
-    SlotMachine.createSlots();
+    SlotMachine.createSlots(slots);
     $(document).on("touchstart touchmove mousedown mousemove", this.lockScreen);
     $(window).on("orientationchange", this.orientationChangeHandler);
     $(window).on("scroll", this.scrollHandler);
@@ -96,42 +76,48 @@ SlotMachine = {
       webkitTransform: 'translate3d(0, 0, 0)'
     }).one("webkitTransitionEnd", this.closedHandler);
   },
-  createSlots: function() {
-    var index, _i, _ref, _results;
+  createSlots: function(slots) {
+    var slot, _i, _len, _results;
     $("#sw-slots").empty();
-    this.assert(this.slots.length === this.slotStyles.length, "slot styles matches number of slots");
     _results = [];
-    for (index = _i = 0, _ref = this.slots.length - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; index = 0 <= _ref ? ++_i : --_i) {
-      _results.push(this.createSlot(index));
+    for (_i = 0, _len = slots.length; _i < _len; _i++) {
+      slot = slots[_i];
+      _results.push(this.createSlot(slot));
     }
     return _results;
   },
-  createSlot: function(index) {
-    var defaultEntry, div, entry, slot, ul, _i, _len;
-    slot = this.slots[index];
+  createSlot: function(slot) {
+    var defaultEntry, div, entry, ul, _i, _len, _ref;
     ul = $("<ul/>").css({
       webkitTransitionTimingFunction: 'cubic-bezier(0, 0, 0.2, 1)'
     }).data({
       slotYPosition: 0
     });
-    for (_i = 0, _len = slot.length; _i < _len; _i++) {
-      entry = slot[_i];
-      this.assert(entry.label, "entry in slot " + index + " has a label");
+    _ref = slot.entries;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      entry = _ref[_i];
+      if (typeof entry !== "object") {
+        entry = {
+          label: entry
+        };
+      }
+      this.assert(entry.label, "entry in slot " + slot + " has a label");
       if (!entry.value) {
         entry.value = entry.label;
       }
       $("<li>" + entry.label + "</li>").data("value", entry.value).appendTo(ul);
     }
-    div = $("<div/>").addClass(this.slotStyles[index]).append(ul);
+    div = $("<div/>").addClass(slot.style).append(ul);
     $("#sw-slots").append(div);
     ul.data({
       slotMaxScroll: $("#sw-slots-wrapper").innerHeight() - ul.innerHeight() - 86
     });
     defaultEntry = (function() {
-      var _j, _len1, _results;
+      var _j, _len1, _ref1, _results;
+      _ref1 = slot.entries;
       _results = [];
-      for (_j = 0, _len1 = slot.length; _j < _len1; _j++) {
-        entry = slot[_j];
+      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+        entry = _ref1[_j];
         if (entry["default"]) {
           _results.push(entry);
         }
@@ -139,14 +125,12 @@ SlotMachine = {
       return _results;
     })();
     if (defaultEntry[0]) {
-      return this.scrollToValue(index, defaultEntry[0]);
+      return this.scrollToValue(ul, defaultEntry[0]);
     }
   },
-  scrollToValue: function(index, entry) {
-    var count, slot, v, _i, _len, _ref, _results;
-    this.assert(this.slots[index], "slot " + index + " exists in SlotMachine.slots array");
-    slot = $("#sw-slots div:nth-child(" + (1 + index) + ") ul");
-    this.assert(slot[0], "slot " + index + " exists in DOM");
+  scrollToValue: function(slot, entry) {
+    var count, v, _i, _len, _ref, _results;
+    this.assert(slot[0], "slot exists in DOM");
     count = 0;
     _ref = slot.children();
     _results = [];
@@ -221,7 +205,9 @@ SlotMachine = {
     SlotMachine.lockScreen(e);
     SlotMachine.buttonTapCancel(e);
     button = $(e.currentTarget);
-    button.trigger("pressed");
+    $("#sw-wrapper").one("webkitTransitionEnd", function() {
+      return button.trigger("pressed");
+    });
     return SlotMachine.close();
   },
   frameTouchstart: function(e) {

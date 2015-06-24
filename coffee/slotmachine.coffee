@@ -4,21 +4,16 @@ SlotMachine =
   cellHeight: 44,
   friction: 0.003,
   strictAssertions: true,
-  slots: [
-    [ { label: "January" }, { label: "February", default: true } ],
-    [ { label: "1", value: 1 }, { label: "2", value: 2 } ],
-  ],
-  slotStyles: [ "", "" ],
   buttons:
     cancel: { label: "Cancel", position: "left", style: "sw-cancel" },
     done:   { label: "Done", position: "right", style: "sw-done" }
+
   scrolling: false,
   onChangeAction: () ->
     newSlotValue = SlotMachine.getValueForSlot(SlotMachine.activeSlot)
     if newSlotValue != SlotMachine.oldSlotValue
       SlotMachine.changeAction()
   changeAction: () ->
-  buttonAction: (but) ->
   assert: (test, label) ->
     if !test
       console.log("Assertion failed: "+label)
@@ -32,7 +27,7 @@ SlotMachine =
     $(window).off("orientationchange", this.orientationChangeHandler)
     $(window).off("scroll", this.scrollHandler)    
 
-  init: () ->
+  init: (slots) ->
     SlotMachine.destroy()
     swheader = $('<div id="sw-header">')
     for name, button of this.buttons
@@ -49,7 +44,7 @@ SlotMachine =
     ).append(swheader)
     swwrapper.append('<div id="sw-slots-wrapper"><div id="sw-slots"></div></div><div id="sw-frame"></div>')
     $("body").append(swwrapper)
-    SlotMachine.createSlots()
+    SlotMachine.createSlots(slots)
     $(document).on("touchstart touchmove mousedown mousemove", this.lockScreen)
     $(window).on("orientationchange", this.orientationChangeHandler)
     $(window).on("scroll", this.scrollHandler)
@@ -66,32 +61,28 @@ SlotMachine =
       webkitTransform: 'translate3d(0, 0, 0)'
     ).one("webkitTransitionEnd", this.closedHandler)
 
-  createSlots: () ->
+  createSlots: (slots) ->
     $("#sw-slots").empty()
-    this.assert(this.slots.length == this.slotStyles.length, "slot styles matches number of slots")
-    this.createSlot(index) for index in [0..this.slots.length-1]
+    this.createSlot(slot) for slot in slots
 
-  createSlot: (index) ->
-    slot = this.slots[index]
-    ul = $("<ul/>").css({webkitTransitionTimingFunction: 'cubic-bezier(0, 0, 0.2, 1)'}).data(
-      slotYPosition: 0,
-    )
+  createSlot: (slot) ->
+    ul = $("<ul/>").css({webkitTransitionTimingFunction: 'cubic-bezier(0, 0, 0.2, 1)'})
+      .data(slotYPosition: 0)
 
-    for entry in slot
-      this.assert(entry.label, "entry in slot "+index+" has a label")
+    for entry in slot.entries
+      if typeof(entry) != "object" then entry = { label: entry }
+      this.assert(entry.label, "entry in slot "+slot+" has a label")
       if not entry.value then entry.value = entry.label
       $("<li>"+entry.label+"</li>").data("value", entry.value).appendTo(ul) 
 
-    div = $("<div/>").addClass(this.slotStyles[index]).append(ul)
+    div = $("<div/>").addClass(slot.style).append(ul)
     $("#sw-slots").append(div)
     ul.data({ slotMaxScroll: $("#sw-slots-wrapper").innerHeight() - ul.innerHeight() - 86 }) # XXX clientHeight
-    defaultEntry = (entry for entry in slot when entry.default)
-    this.scrollToValue(index, defaultEntry[0]) if defaultEntry[0]
+    defaultEntry = (entry for entry in slot.entries when entry.default)
+    this.scrollToValue(ul, defaultEntry[0]) if defaultEntry[0]
 
-  scrollToValue: (index, entry) ->
-    this.assert(this.slots[index], "slot "+index+" exists in SlotMachine.slots array")
-    slot = $("#sw-slots div:nth-child("+(1+index)+") ul")
-    this.assert(slot[0], "slot "+index+" exists in DOM")
+  scrollToValue: (slot, entry) ->
+    this.assert(slot[0], "slot exists in DOM")
     count = 0
     for v in slot.children()
       if $(v).data("value") == entry.value
@@ -153,7 +144,8 @@ SlotMachine =
     SlotMachine.lockScreen(e)    
     SlotMachine.buttonTapCancel(e)
     button = $(e.currentTarget)
-    button.trigger("pressed")   
+    $("#sw-wrapper").one "webkitTransitionEnd", ->
+      button.trigger("pressed")   
     SlotMachine.close()
 
   frameTouchstart: (e) ->
