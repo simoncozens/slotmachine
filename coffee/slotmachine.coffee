@@ -15,7 +15,7 @@ SlotMachine =
   scrolling: false,
   onChangeAction: () ->
     newSlotValue = SlotMachine.getValueForSlot(SlotMachine.activeSlot)
-    if newSlotValue != oldSlotValue
+    if newSlotValue != SlotMachine.oldSlotValue
       SlotMachine.changeAction()
   changeAction: () ->
   buttonAction: (but) ->
@@ -187,10 +187,7 @@ SlotMachine =
     event = if e.targetTouches then e.targetTouches[0] else e
     for slot in $("#sw-slots div ul")
       slot = $(slot)
-      console.log(this.activeSlot)
-      console.log("Client X was "+ event.clientX+ " and my offset was " + slot.offset().left)
       if event.clientX < slot.offset().left + slot.width()
-        console.log("I am now the active slot")
         this.activeSlot = slot
         break
 
