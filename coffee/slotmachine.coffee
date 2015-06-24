@@ -136,25 +136,25 @@ SlotMachine =
   closedHandler: () ->
 
   buttonTapDown: (e) ->
-    this.lockScreen(e)
+    SlotMachine.lockScreen(e)
     button = $(e.currentTarget)
-    button.on("touchmove mousemove", this.buttonTapCancel)
-    button.on("touchend mouseup", this.buttonTapUp)
+    button.on("touchmove mousemove", SlotMachine.buttonTapCancel)
+    button.on("touchend mouseup", SlotMachine.buttonTapUp)
     button.addClass("sw-pressed")
 
   buttonTapCancel: (e) ->
-    this.lockScreen(e)
+    SlotMachine.lockScreen(e)
     button = $(e.currentTarget)
-    button.off("touchmove mousemove", this.buttonTapcancel)
-    button.off("touchend mouseup", this.buttonTapUp)
+    button.off("touchmove mousemove", SlotMachine.buttonTapcancel)
+    button.off("touchend mouseup", SlotMachine.buttonTapUp)
     button.removeClass("sw-pressed")
 
   buttonTapUp: (e) ->
-    this.lockScreen(e)    
-    this.buttonTapCancel(e)
+    SlotMachine.lockScreen(e)    
+    SlotMachine.buttonTapCancel(e)
     button = $(e.currentTarget)
     button.trigger("pressed")   
-    this.close()
+    SlotMachine.close()
 
   frameTouchstart: (e) ->
     SlotMachine.lockScreen(e)
