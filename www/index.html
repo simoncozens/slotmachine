@@ -1,0 +1,26 @@
+<html>
+  <head>
+  <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width" />
+  <link rel="stylesheet" type="text/css" href="css/spinningwheel.css" />
+  </head>
+  <body>
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type="text/javascript" src="slotmachine.js"></script>
+
+    <h1> Slot machine test </h1>
+
+    <button id="show">Show</button>
+    <button id="close">Close</button>
+
+    <span id="change"></span>
+    <script>
+        SlotMachine.init()
+        SlotMachine.changeAction = function () {
+          arr = SlotMachine.getSelectedValues()
+          $("#change").html("Changed: " + arr[0] + " " + arr[1])
+        }
+        $("#show").click(function(){ SlotMachine.open() })
+        $("#close").click(function(){ SlotMachine.close() })
+    </script>
+  </body>
+</html>
