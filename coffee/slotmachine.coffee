@@ -63,22 +63,30 @@ SlotMachine =
 
   createSlots: (slots) ->
     $("#sw-slots").empty()
-    this.createSlot(slot) for slot in slots
+    this.createSlot(index, slots[index]) for index in [0..slots.length-1]
 
-  createSlot: (slot) ->
-    ul = $("<ul/>").css({webkitTransitionTimingFunction: 'cubic-bezier(0, 0, 0.2, 1)'})
-      .data(slotYPosition: 0)
+  createSlot: (index, data) ->
+    # Do we have this already?
+    oldUl = $("#sw-slots div:nth-child("+(1+index)+")")
+    if oldUl[0]
+      ul = oldUl.children("ul")
+      ul.empty()
+    else
+      ul = $("<ul/>").css({webkitTransitionTimingFunction: 'cubic-bezier(0, 0, 0.2, 1)'})
+    
+    ul.data(slotYPosition: 0)
 
-    for entry in slot.entries
+    for entry in data.entries
       if typeof(entry) != "object" then entry = { label: entry }
-      this.assert(entry.label, "entry in slot "+slot+" has a label")
+      this.assert(entry.label, "entry in slot "+index+" has a label")
       if not entry.value then entry.value = entry.label
       $("<li>"+entry.label+"</li>").data("value", entry.value).appendTo(ul) 
 
-    div = $("<div/>").addClass(slot.style).append(ul)
-    $("#sw-slots").append(div)
+    if not oldUl[0]
+      div = $("<div/>").addClass(data.style).append(ul)
+      $("#sw-slots").append(div)
     ul.data({ slotMaxScroll: $("#sw-slots-wrapper").innerHeight() - ul.innerHeight() - 86 }) # XXX clientHeight
-    defaultEntry = (entry for entry in slot.entries when entry.default)
+    defaultEntry = (entry for entry in data.entries when entry.default)
     this.scrollToValue(ul, defaultEntry[0]) if defaultEntry[0]
 
   scrollToValue: (slot, entry) ->

@@ -77,23 +77,29 @@ SlotMachine = {
     }).one("webkitTransitionEnd", this.closedHandler);
   },
   createSlots: function(slots) {
-    var slot, _i, _len, _results;
+    var index, _i, _ref, _results;
     $("#sw-slots").empty();
     _results = [];
-    for (_i = 0, _len = slots.length; _i < _len; _i++) {
-      slot = slots[_i];
-      _results.push(this.createSlot(slot));
+    for (index = _i = 0, _ref = slots.length - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; index = 0 <= _ref ? ++_i : --_i) {
+      _results.push(this.createSlot(index, slots[index]));
     }
     return _results;
   },
-  createSlot: function(slot) {
-    var defaultEntry, div, entry, ul, _i, _len, _ref;
-    ul = $("<ul/>").css({
-      webkitTransitionTimingFunction: 'cubic-bezier(0, 0, 0.2, 1)'
-    }).data({
+  createSlot: function(index, data) {
+    var defaultEntry, div, entry, oldUl, ul, _i, _len, _ref;
+    oldUl = $("#sw-slots div:nth-child(" + (1 + index) + ")");
+    if (oldUl[0]) {
+      ul = oldUl.children("ul");
+      ul.empty();
+    } else {
+      ul = $("<ul/>").css({
+        webkitTransitionTimingFunction: 'cubic-bezier(0, 0, 0.2, 1)'
+      });
+    }
+    ul.data({
       slotYPosition: 0
     });
-    _ref = slot.entries;
+    _ref = data.entries;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       entry = _ref[_i];
       if (typeof entry !== "object") {
@@ -101,20 +107,22 @@ SlotMachine = {
           label: entry
         };
       }
-      this.assert(entry.label, "entry in slot " + slot + " has a label");
+      this.assert(entry.label, "entry in slot " + index + " has a label");
       if (!entry.value) {
         entry.value = entry.label;
       }
       $("<li>" + entry.label + "</li>").data("value", entry.value).appendTo(ul);
     }
-    div = $("<div/>").addClass(slot.style).append(ul);
-    $("#sw-slots").append(div);
+    if (!oldUl[0]) {
+      div = $("<div/>").addClass(data.style).append(ul);
+      $("#sw-slots").append(div);
+    }
     ul.data({
       slotMaxScroll: $("#sw-slots-wrapper").innerHeight() - ul.innerHeight() - 86
     });
     defaultEntry = (function() {
       var _j, _len1, _ref1, _results;
-      _ref1 = slot.entries;
+      _ref1 = data.entries;
       _results = [];
       for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
         entry = _ref1[_j];
