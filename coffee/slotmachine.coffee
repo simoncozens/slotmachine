@@ -61,6 +61,10 @@ SlotMachine =
       webkitTransform: 'translate3d(0, 0, 0)'
     ).one("webkitTransitionEnd", this.closedHandler)
 
+  slotByIndex: (index) ->
+    s = $("#sw-slots div:nth-child("+(1+index)+") ul")
+    if s[0] then return s
+
   createSlots: (slots) ->
     $("#sw-slots").empty()
     this.createSlot(index, slots[index]) for index in [0..slots.length-1]
@@ -90,6 +94,7 @@ SlotMachine =
     this.scrollToValue(ul, defaultEntry[0]) if defaultEntry[0]
 
   scrollToValue: (slot, entry) ->
+    if typeof(slot) != "object" then slot = @slotByIndex(slot)
     this.assert(slot[0], "slot exists in DOM")
     count = 0
     for v in slot.children()
