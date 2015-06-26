@@ -33,7 +33,7 @@ SlotMachine =
     for name, button of this.buttons
       $("<div/>").attr("id", button.style) # Transitional
         .append(button.label)
-        .on("pressed", button.event)
+        .on("pressed", button.action)
         .on("touchstart mousedown", this.buttonTapDown)
         .appendTo(swheader) 
 
