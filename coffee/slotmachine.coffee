@@ -267,10 +267,10 @@ SlotMachine =
   backWithinBoundaries: (e) ->
     slot = $(e.target)
     if slot.data("slotYPosition") > 0 
-      this.scrollTo(slot, 0)
+      SlotMachine.scrollTo(slot, 0)
       return false
     else if slot.data("slotYPosition") < slot.data("slotMaxScroll")
-      this.scrollTo(slot, slot.data("slotMaxScroll"))
+      SlotMachine.scrollTo(slot, slot.data("slotMaxScroll"))
       return false
     else
       return true
