@@ -76,6 +76,13 @@ SlotMachine = {
       webkitTransform: 'translate3d(0, 0, 0)'
     }).one("webkitTransitionEnd", this.closedHandler);
   },
+  slotByIndex: function(index) {
+    var s;
+    s = $("#sw-slots div:nth-child(" + (1 + index) + ") ul");
+    if (s[0]) {
+      return s;
+    }
+  },
   createSlots: function(slots) {
     var index, _i, _ref, _results;
     $("#sw-slots").empty();
@@ -99,6 +106,7 @@ SlotMachine = {
     ul.data({
       slotYPosition: 0
     });
+    this.assert(data.entries, "data for slot " + index + " has entries");
     _ref = data.entries;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       entry = _ref[_i];
@@ -138,6 +146,9 @@ SlotMachine = {
   },
   scrollToValue: function(slot, entry) {
     var count, v, _i, _len, _ref, _results;
+    if (typeof slot !== "object") {
+      slot = this.slotByIndex(slot);
+    }
     this.assert(slot[0], "slot exists in DOM");
     count = 0;
     _ref = slot.children();
@@ -353,10 +364,10 @@ SlotMachine = {
     var slot;
     slot = $(e.target);
     if (slot.data("slotYPosition") > 0) {
-      this.scrollTo(slot, 0);
+      SlotMachine.scrollTo(slot, 0);
       return false;
     } else if (slot.data("slotYPosition") < slot.data("slotMaxScroll")) {
-      this.scrollTo(slot, slot.data("slotMaxScroll"));
+      SlotMachine.scrollTo(slot, slot.data("slotMaxScroll"));
       return false;
     } else {
       return true;
