@@ -95,6 +95,7 @@ SlotMachine =
 
   scrollToValue: (slot, entry) ->
     if typeof(slot) != "object" then slot = @slotByIndex(slot)
+    this.assert(entry.value, "entry has a value")
     this.assert(slot[0], "slot exists in DOM")
     count = 0
     for v in slot.children()
