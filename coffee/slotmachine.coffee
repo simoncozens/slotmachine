@@ -75,7 +75,7 @@ SlotMachine =
       ul = $("<ul/>").css({webkitTransitionTimingFunction: 'cubic-bezier(0, 0, 0.2, 1)'})
     
     ul.data(slotYPosition: 0)
-
+    @assert(typeof(data.entries) =="object", "data for slot "+index+" has entries")
     for entry in data.entries
       if typeof(entry) != "object" then entry = { label: entry }
       this.assert(entry.label, "entry in slot "+index+" has a label")
