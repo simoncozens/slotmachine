@@ -106,6 +106,9 @@ SlotMachine =
     slot.data("slotYPosition", position)
     slot.css("webkitTransform", 'translate3d(0, ' + position + 'px, 0)')
 
+  getPosition: (slot) ->
+    slot.data("slotYPosition") || new WebKitCSSMatrix(slot.css("-webkit-transform")).m42
+
   getValueForSlot: (slot) ->
     this.assert(slot[0], "slot is a jQuery object")
     slot.unbind("webkitTransitionEnd").css("webkitTransitionDuration", 0)
@@ -114,7 +117,7 @@ SlotMachine =
     else if slot.data("slotYPosition") < slot.data("slotMaxScroll")
       this.setPosition(slot, slot.data("slotMaxScroll"))
 
-    index = -Math.round(slot.data("slotYPosition") / this.cellHeight)
+    index = -Math.round(SlotMachine.getPosition(slot) / this.cellHeight)
     li = $(slot.children("li:nth-child("+(1+index)+")"))
     return li.data("value")
 

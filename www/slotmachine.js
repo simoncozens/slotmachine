@@ -98,6 +98,9 @@ SlotMachine = {
         webkitTransitionTimingFunction: 'cubic-bezier(0, 0, 0.2, 1)'
       });
     }
+    ul.data({
+      slotYPosition: 0
+    });
     this.assert(typeof data.entries === "object", "data for slot " + index + " has entries");
     _ref = data.entries;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -158,21 +161,22 @@ SlotMachine = {
   },
   setPosition: function(slot, position) {
     this.assert(slot[0], "slot is a jQuery object");
+    slot.data("slotYPosition", position);
     return slot.css("webkitTransform", 'translate3d(0, ' + position + 'px, 0)');
   },
   getPosition: function(slot) {
-    return new WebKitCSSMatrix(slot.css("-webkit-transform")).m42;
+    return slot.data("slotYPosition") || new WebKitCSSMatrix(slot.css("-webkit-transform")).m42;
   },
   getValueForSlot: function(slot) {
     var index, li;
     this.assert(slot[0], "slot is a jQuery object");
     slot.unbind("webkitTransitionEnd").css("webkitTransitionDuration", 0);
-    if (this.getPosition(slot) > 0) {
+    if (slot.data("slotYPosition") > 0) {
       this.setPosition(slot, 0);
-    } else if (this.getPosition(slot) < slot.data("slotMaxScroll")) {
+    } else if (slot.data("slotYPosition") < slot.data("slotMaxScroll")) {
       this.setPosition(slot, slot.data("slotMaxScroll"));
     }
-    index = -Math.round(this.getPosition(slot) / this.cellHeight);
+    index = -Math.round(SlotMachine.getPosition(slot) / this.cellHeight);
     li = $(slot.children("li:nth-child(" + (1 + index) + ")"));
     return li.data("value");
   },
@@ -252,7 +256,7 @@ SlotMachine = {
       });
       return SlotMachine.scrolling = false;
     } else {
-      scrollTo = SlotMachine.getPosition(SlotMachine.activeSlot) - (SlotMachine.whichPos * SlotMachine.cellHeight);
+      scrollTo = SlotMachine.activeSlot.data("slotYPosition") - (SlotMachine.whichPos * SlotMachine.cellHeight);
       if (scrollTo <= 0 && scrollTo >= SlotMachine.activeSlot.data("slotMaxScroll")) {
         SlotMachine.activeSlot.one('webkitTransitionEnd', function(e) {
           if (SlotMachine.backWithinBoundaries(e)) {
@@ -264,7 +268,7 @@ SlotMachine = {
     }
   },
   scrollStart: function(e) {
-    var event, slot, _i, _len, _ref;
+    var event, slot, theTransform, _i, _len, _ref;
     this.lockScreen(e);
     event = e.targetTouches && e.targetTouches[0].clientX ? e.targetTouches[0] : e;
     _ref = $("#sw-slots div ul");
@@ -281,8 +285,12 @@ SlotMachine = {
       return;
     }
     slot.unbind("webkitTransitionEnd").css("webkitTransitionDuration", 0);
+    theTransform = new WebKitCSSMatrix(slot.css("-webkit-transform")).m42;
+    if (theTransform !== slot.data("slotYPosition")) {
+      this.setPosition(slot, theTransform);
+    }
     this.startY = event.clientY;
-    this.scrollStartY = this.getPosition(slot);
+    this.scrollStartY = slot.data("slotYPosition");
     this.scrollStartTime = e.timeStamp;
     $("#sw-frame").on("touchmove mousemove", this.frameTouchmove);
     $("#sw-frame").on("touchend mouseup", this.frameTouchend);
@@ -295,13 +303,13 @@ SlotMachine = {
     }
     event = e.targetTouches ? e.targetTouches[0] : e;
     topDelta = event.clientY - this.startY;
-    if (this.getPosition(this.activeSlot) > 0 || this.getPosition(this.activeSlot) < this.activeSlot.data("slotMaxScroll")) {
+    if (this.activeSlot.data("slotYPosition") > 0 || this.activeSlot.data("slotYPosition") < this.activeSlot.data("slotMaxScroll")) {
       topDelta /= 2;
     }
-    this.setPosition(this.activeSlot, this.getPosition(this.activeSlot) + topDelta);
+    this.setPosition(this.activeSlot, this.activeSlot.data("slotYPosition") + topDelta);
     this.startY = event.clientY;
     if (e.timeStamp - this.scrollStartTime > 80) {
-      this.scrollStartY = this.getPosition(this.activeSlot);
+      this.scrollStartY = this.activeSlot.data("slotYPosition");
       return this.scrollStartTime = e.timeStamp;
     }
   },
@@ -309,7 +317,7 @@ SlotMachine = {
     var maxScroll, newDuration, newPosition, newScrollDistance, scrollDistance, scrollDuration, ypos;
     $("#sw-frame").off("touchmove mousemove", this.frameTouchmove);
     $("#sw-frame").off("touchend mouseup", this.frameTouchend);
-    ypos = this.getPosition(this.activeSlot);
+    ypos = this.activeSlot.data("slotYPosition");
     maxScroll = this.activeSlot.data("slotMaxScroll");
     if (ypos > 0) {
       this.scrollTo(this.activeSlot, 0);
@@ -354,17 +362,17 @@ SlotMachine = {
   scrollTo: function(slot, dest, runtime) {
     slot.css("webkitTransitionDuration", runtime || "250ms");
     this.setPosition(slot, dest);
-    if (this.getPosition(slot) > 0 || this.getPosition(slot) < slot.data("slotMaxScroll")) {
+    if (slot.data("slotYPosition") > 0 || slot.data("slotYPosition") < slot.data("slotMaxScroll")) {
       return slot.one("webkitTransitionEnd", this.backWithinBoundaries);
     }
   },
   backWithinBoundaries: function(e) {
     var slot;
     slot = $(e.target);
-    if (SlotMachine.getPosition(slot) > 0) {
+    if (slot.data("slotYPosition") > 0) {
       SlotMachine.scrollTo(slot, 0);
       return false;
-    } else if (SlotMachine.getPosition(slot) < slot.data("slotMaxScroll")) {
+    } else if (slot.data("slotYPosition") < slot.data("slotMaxScroll")) {
       SlotMachine.scrollTo(slot, slot.data("slotMaxScroll"));
       return false;
     } else {
