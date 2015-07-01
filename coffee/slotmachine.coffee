@@ -20,11 +20,6 @@ SlotMachine =
   destroy: ->
     SlotMachine.activeSlot = null
     $("#sw-wrapper").remove()
-    window.removeEventListener('orientationchange', this, true);
-    window.removeEventListener('scroll', this, true);
-    $(document).off("touchstart touchmove mousedown mousemove", this.lockScreen)
-    $(window).off("orientationchange", this.orientationChangeHandler)
-    $(window).off("scroll", this.scrollHandler)    
 
   init: (slots) ->
     SlotMachine.destroy()
@@ -44,17 +39,20 @@ SlotMachine =
     swwrapper.append('<div id="sw-slots-wrapper"><div id="sw-slots"></div></div><div id="sw-frame"></div>')
     $("body").append(swwrapper)
     SlotMachine.createSlots(slots)
-    $(document).on("touchstart touchmove mousedown mousemove", this.lockScreen)
-    $(window).on("orientationchange", this.orientationChangeHandler)
-    $(window).on("scroll", this.scrollHandler)
     $("#sw-frame").on("touchstart mousedown", this.frameTouchstart)
 
   open: () ->
+    $(document).on("touchstart touchmove mousedown mousemove", this.lockScreen)
+    $(window).on("orientationchange", this.orientationChangeHandler)
+    $(window).on("scroll", this.scrollHandler)
     $("#sw-wrapper").css(
       webkitTransitionTimingFunction: "ease-out"
       webkitTransform: "translate3d(0, -260px, 0)"      
     )
   close: () ->
+    $(document).off("touchstart touchmove mousedown mousemove", this.lockScreen)
+    $(window).off("orientationchange", this.orientationChangeHandler)
+    $(window).off("scroll", this.scrollHandler)        
     $("#sw-wrapper").css(
       webkitTransitionTimingFunction: 'ease-in',
       webkitTransform: 'translate3d(0, 0, 0)'
@@ -164,6 +162,7 @@ SlotMachine =
 
   frameTouchstart: (e) ->
     SlotMachine.lockScreen(e)
+    if e.originalEvent then e = e.originalEvent
     yoffset = if e.targetTouches then e.targetTouches[0].clientY - e.target.getBoundingClientRect().top else e.offsetY
     SlotMachine.whichPos = Math.floor(yoffset / SlotMachine.cellHeight) - 2 
     # You can only go up/down a max of two positions
@@ -190,7 +189,7 @@ SlotMachine =
 
   scrollStart: (e) ->
     this.lockScreen(e)
-    event = if e.targetTouches then e.targetTouches[0] else e
+    event = if e.targetTouches and e.targetTouches[0].clientX then e.targetTouches[0] else e
     for slot in $("#sw-slots div ul")
       slot = $(slot)
       if event.clientX < slot.offset().left + slot.width()
@@ -210,6 +209,7 @@ SlotMachine =
     return true
 
   scrollMove: (e) ->
+    if e.originalEvent then e = e.originalEvent
     event = if e.targetTouches then e.targetTouches[0] else e
     topDelta = event.clientY - this.startY
     if this.getPosition(this.activeSlot) > 0 or this.getPosition(this.activeSlot) < this.activeSlot.data("slotMaxScroll")
@@ -272,10 +272,10 @@ SlotMachine =
 
   backWithinBoundaries: (e) ->
     slot = $(e.target)
-    if this.getPosition(slot) > 0 
+    if SlotMachine.getPosition(slot) > 0 
       SlotMachine.scrollTo(slot, 0)
       return false
-    else if this.getPosition(slot) < slot.data("slotMaxScroll")
+    else if SlotMachine.getPosition(slot) < slot.data("slotMaxScroll")
       SlotMachine.scrollTo(slot, slot.data("slotMaxScroll"))
       return false
     else
