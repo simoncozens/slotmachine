@@ -3,7 +3,6 @@
 SlotMachine =
   cellHeight: 44,
   friction: 0.003,
-  strictAssertions: true,
   buttons:
     cancel: { label: "Cancel", position: "left", style: "sw-cancel" },
     done:   { label: "Done", position: "right", style: "sw-done" }
@@ -16,8 +15,7 @@ SlotMachine =
   changeAction: () ->
   assert: (test, label) ->
     if !test
-      console.log("Assertion failed: "+label)
-      if this.strictAssertions then alert("Assertion failed: "+label)
+      throw new Error("Assertion failed: "+label)
 
   destroy: ->
     $("#sw-wrapper").remove()
