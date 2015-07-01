@@ -18,6 +18,7 @@ SlotMachine =
       throw new Error("Assertion failed: "+label)
 
   destroy: ->
+    SlotMachine.activeSlot = null
     $("#sw-wrapper").remove()
     window.removeEventListener('orientationchange', this, true);
     window.removeEventListener('scroll', this, true);
