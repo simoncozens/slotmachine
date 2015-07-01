@@ -109,6 +109,7 @@ SlotMachine =
     slot.css("webkitTransform", 'translate3d(0, ' + position + 'px, 0)')
 
   getValueForSlot: (slot) ->
+    this.assert(slot[0], "slot is a jQuery object")
     slot.unbind("webkitTransitionEnd").css("webkitTransitionDuration", 0)
     if slot.data("slotYPosition") > 0
       this.setPosition(slot, 0)
