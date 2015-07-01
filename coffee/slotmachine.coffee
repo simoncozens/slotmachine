@@ -75,6 +75,7 @@ SlotMachine =
     else
       ul = $("<ul/>").css({webkitTransitionTimingFunction: 'cubic-bezier(0, 0, 0.2, 1)'})
     
+    ul.data(slotYPosition: 0)
     @assert(typeof(data.entries) =="object", "data for slot "+index+" has entries")
     for entry in data.entries
       if typeof(entry) != "object" then entry = { label: entry }
@@ -102,19 +103,18 @@ SlotMachine =
 
   setPosition: (slot, position) ->
     this.assert(slot[0], "slot is a jQuery object")
+    slot.data("slotYPosition", position)
     slot.css("webkitTransform", 'translate3d(0, ' + position + 'px, 0)')
-
-  getPosition: (slot) -> new WebKitCSSMatrix(slot.css("-webkit-transform")).m42
 
   getValueForSlot: (slot) ->
     this.assert(slot[0], "slot is a jQuery object")
     slot.unbind("webkitTransitionEnd").css("webkitTransitionDuration", 0)
-    if this.getPosition(slot) > 0
+    if slot.data("slotYPosition") > 0
       this.setPosition(slot, 0)
-    else if this.getPosition(slot) < slot.data("slotMaxScroll")
+    else if slot.data("slotYPosition") < slot.data("slotMaxScroll")
       this.setPosition(slot, slot.data("slotMaxScroll"))
 
-    index = -Math.round(this.getPosition(slot) / this.cellHeight)
+    index = -Math.round(slot.data("slotYPosition") / this.cellHeight)
     li = $(slot.children("li:nth-child("+(1+index)+")"))
     return li.data("value")
 
@@ -181,7 +181,7 @@ SlotMachine =
         if SlotMachine.backWithinBoundaries(e) then SlotMachine.onChangeAction(e)
       SlotMachine.scrolling = false
     else
-      scrollTo = SlotMachine.getPosition(SlotMachine.activeSlot) - (SlotMachine.whichPos * SlotMachine.cellHeight)
+      scrollTo = SlotMachine.activeSlot.data("slotYPosition") - (SlotMachine.whichPos * SlotMachine.cellHeight)
       if scrollTo <= 0 and scrollTo >= SlotMachine.activeSlot.data("slotMaxScroll")
         SlotMachine.activeSlot.one 'webkitTransitionEnd', (e) ->
           if SlotMachine.backWithinBoundaries(e) then SlotMachine.onChangeAction(e)
@@ -200,9 +200,12 @@ SlotMachine =
       $("#sw-frame").off("touchmove touchend mousemove mouseup", this.frameMoved)
       return
     slot.unbind("webkitTransitionEnd").css("webkitTransitionDuration", 0)
+    theTransform = new WebKitCSSMatrix(slot.css("-webkit-transform")).m42
+    if theTransform != slot.data("slotYPosition")
+      this.setPosition(slot, theTransform)
 
     this.startY = event.clientY;
-    this.scrollStartY = this.getPosition(slot)
+    this.scrollStartY = slot.data("slotYPosition")
     this.scrollStartTime = e.timeStamp;
     $("#sw-frame").on("touchmove mousemove", this.frameTouchmove)
     $("#sw-frame").on("touchend mouseup", this.frameTouchend)
@@ -212,19 +215,18 @@ SlotMachine =
     if e.originalEvent then e = e.originalEvent
     event = if e.targetTouches then e.targetTouches[0] else e
     topDelta = event.clientY - this.startY
-    if this.getPosition(this.activeSlot) > 0 or this.getPosition(this.activeSlot) < this.activeSlot.data("slotMaxScroll")
+    if this.activeSlot.data("slotYPosition") > 0 or this.activeSlot.data("slotYPosition") < this.activeSlot.data("slotMaxScroll")
       topDelta /= 2
-    this.setPosition(this.activeSlot, this.getPosition(this.activeSlot) + topDelta)
+    this.setPosition(this.activeSlot, this.activeSlot.data("slotYPosition") + topDelta)
     this.startY = event.clientY
     if e.timeStamp - this.scrollStartTime > 80
-      this.scrollStartY = this.getPosition(this.activeSlot)
+      this.scrollStartY = this.activeSlot.data("slotYPosition")
       this.scrollStartTime = e.timeStamp;
 
   scrollEnd: (e) ->
     $("#sw-frame").off("touchmove mousemove", this.frameTouchmove)
     $("#sw-frame").off("touchend mouseup", this.frameTouchend)
-    ypos = this.getPosition(this.activeSlot)
-
+    ypos = this.activeSlot.data("slotYPosition")
     maxScroll = this.activeSlot.data("slotMaxScroll")
     if ypos > 0 
       this.scrollTo(this.activeSlot, 0)
@@ -232,7 +234,6 @@ SlotMachine =
     else if ypos < maxScroll
       this.scrollTo(this.activeSlot, maxScroll)
       return false
-
     scrollDistance = ypos - this.scrollStartY
     if scrollDistance < this.cellHeight / 1.5 and scrollDistance > -this.cellHeight / 1.5
       if ypos % this.cellHeight
@@ -261,21 +262,20 @@ SlotMachine =
       newPosition = Math.round(newPosition / this.cellHeight) * this.cellHeight
 
     this.scrollTo(this.activeSlot, Math.round(newPosition), Math.round(newDuration) + 'ms');
-
     return true
 
   scrollTo: (slot, dest, runtime) ->
     slot.css("webkitTransitionDuration", runtime || "250ms")
     this.setPosition(slot, dest)
-    if this.getPosition(slot) > 0 or this.getPosition(slot) < slot.data("slotMaxScroll")
+    if slot.data("slotYPosition") > 0 or slot.data("slotYPosition") < slot.data("slotMaxScroll")
       slot.one("webkitTransitionEnd", this.backWithinBoundaries)
 
   backWithinBoundaries: (e) ->
     slot = $(e.target)
-    if SlotMachine.getPosition(slot) > 0 
+    if slot.data("slotYPosition") > 0 
       SlotMachine.scrollTo(slot, 0)
       return false
-    else if SlotMachine.getPosition(slot) < slot.data("slotMaxScroll")
+    else if slot.data("slotYPosition") < slot.data("slotMaxScroll")
       SlotMachine.scrollTo(slot, slot.data("slotMaxScroll"))
       return false
     else
